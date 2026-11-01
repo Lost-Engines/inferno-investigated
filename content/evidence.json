@@ -1,0 +1,10 @@
+{
+  "game_and_credits": ["analysis/manuals/handbook-48.txt", "literature/Inferno - Pilot's Handbook.pdf"],
+  "versions": ["analysis/build-versions.json", "analysis/installed-files.md", "analysis/archive-comparison.md"],
+  "models": ["analysis/model-format.md", "analysis/models/data.js"],
+  "worlds_and_retained_material": ["analysis/world-format.md", "analysis/retained-resources.md", "analysis/maps/data.js"],
+  "corridors": ["analysis/corridor-format.md", "analysis/corridors/data.js"],
+  "sound": ["analysis/music-formats.md", "analysis/music/selection-checks.json"],
+  "preview": ["analysis/prerelease.md", "analysis/prerelease/tfx-cinematic-demo.json"],
+  "exactness": ["analysis/exact-reproduction-audit.md", "analysis/game/heap-and-radar.md", "analysis/cpp-checks/init-path-frames/current-binary-verified/report.json", "analysis/cpp-checks/dosbox-journey/dense-radar-flown-4007-long/comparison.json"]
+}

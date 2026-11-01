@@ -1,0 +1,144 @@
+{
+  "images": [
+    {
+      "file": "laboratory.png",
+      "source": "analysis/artwork/cb4ac8ab40984cf0.png",
+      "source_sha256": "654c4d864ea0cc95489fd05ed69b7a5124f086dd62e7f4bd5b997ec86f3eec43",
+      "alt": "An ominous laboratory with a craft suspended above a circular platform",
+      "caption": "The laboratory painting gives Inferno\u2019s machinery a setting beyond the cockpit.",
+      "gallery": true
+    },
+    {
+      "file": "alien-hall.png",
+      "source": "analysis/artwork/1160d64599bb86fd.png",
+      "source_sha256": "8966531bab4e9726d704481b4629e8e344baa0282f6ead0ea78ab65fca331580",
+      "alt": "Figures standing in a cavernous orange-lit alien hall",
+      "caption": "A hall of oversized structures and sharply contrasting light. This painting also forms the site\u2019s opening illustration.",
+      "gallery": true
+    },
+    {
+      "file": "characters.png",
+      "source": "analysis/artwork/675aab35bb47296d.png",
+      "source_sha256": "c2311940a21562146ff32effa38483f493359493ff0f256e566b445f06c5b38c",
+      "alt": "A group of brightly dressed characters gathered together",
+      "caption": "The presentation\u2019s cast and costume design has as much personality as the spacecraft.",
+      "gallery": true
+    },
+    {
+      "file": "navicom.png",
+      "source": "analysis/artwork/da1a4af21c99c810.png",
+      "source_sha256": "f2199dff0933d03e86fdfb729c81f3a8bea32e74fa6eb19c2aa05b553f0cfad4",
+      "alt": "A red and orange Navicom presentation screen",
+      "caption": "Navicom artwork introduces the tactical computer through a mixture of text and rendered machinery.",
+      "gallery": true
+    },
+    {
+      "file": "interior-map.png",
+      "source": "analysis/artwork/b06db1000e033221.png",
+      "source_sha256": "7b237d4200ea0d38a2c16140837dc9885c193210389e2041154a4a96ffa63041",
+      "alt": "A purple and yellow schematic of an interior complex",
+      "caption": "The stored schematic for the rexxxx interior. Compare its forms with the interactive world and corridor views.",
+      "gallery": true
+    },
+    {
+      "file": "options.png",
+      "source": "analysis/artwork/5e202c86f7cb2a2b.png",
+      "source_sha256": "2c3e4182d6acd795518d0d8cacaa8c0d53e4532c6c85aeeb032e7c026deffc61",
+      "alt": "The original options screen with red orbital diagrams",
+      "caption": "Inferno\u2019s menus carry the same red-and-black visual language as its cockpit.",
+      "gallery": true
+    }
+  ],
+  "audio": [
+    {
+      "file": "title-adl.ogg",
+      "source": "analysis/music/flac/title-adl.flac",
+      "source_sha256": "19dc85e4452ac9f10a207b9a1dcd444073b614b229aaf4d6d4ab858043471180",
+      "start_seconds": 0,
+      "duration_seconds": 18,
+      "encoding": "Vorbis quality 5, no additional gain"
+    },
+    {
+      "file": "title-rld.ogg",
+      "source": "analysis/music/flac/title-rld.flac",
+      "source_sha256": "f1170bfc0ce6bc5bcfb320992a1a6b450e20a0b21d86889d7186791ca5648227",
+      "start_seconds": 0,
+      "duration_seconds": 18,
+      "encoding": "Vorbis quality 5, no additional gain"
+    },
+    {
+      "file": "title-scc.ogg",
+      "source": "analysis/music/flac/title-scc.flac",
+      "source_sha256": "32588813999e434ab34ab35e3c8a23a326a5520ee76fa7e52f5a3ea3f5bfb752",
+      "start_seconds": 0,
+      "duration_seconds": 18,
+      "encoding": "Vorbis quality 5, no additional gain"
+    },
+    {
+      "file": "title-sc55.ogg",
+      "source": "analysis/music/flac/title-sc55.flac",
+      "source_sha256": "5a6ba2dd752e3992561b22ba08136beaf59201633bb5077229e6bf3020500f5f",
+      "start_seconds": 0,
+      "duration_seconds": 18,
+      "encoding": "Vorbis quality 5, no additional gain"
+    },
+    {
+      "file": "badnews-rld.ogg",
+      "source": "analysis/music/flac/badnews-rld.flac",
+      "source_sha256": "a185499fc80330e71aba72f6dc135cb700ee15d7aa93615b47da39e229600117",
+      "start_seconds": 0,
+      "duration_seconds": 12,
+      "encoding": "Vorbis quality 5, no additional gain"
+    },
+    {
+      "file": "dramatic-rld.ogg",
+      "source": "analysis/music/flac/dramatic-rld.flac",
+      "source_sha256": "a22acd36d6b4d62573693fdd14c90c504480bb705de5d63e7456f7ef112f7a83",
+      "start_seconds": 0,
+      "duration_seconds": 12,
+      "encoding": "Vorbis quality 5, no additional gain"
+    }
+  ],
+  "viewer_captures": [
+    {
+      "file": "models.jpg",
+      "route": "models/#epicship",
+      "settings": {
+        "zoom": 1.7,
+        "palette": "standard",
+        "vertex_effects": false
+      },
+      "description": "Public model inspection renderer"
+    },
+    {
+      "file": "worlds.jpg",
+      "route": "maps/#planet1/29/150",
+      "settings": {
+        "radius": 2,
+        "ground_backdrop": true
+      },
+      "description": "Public scenery inspection renderer, with the documented ground backdrop"
+    },
+    {
+      "file": "corridors.jpg",
+      "route": "corridors/#0",
+      "settings": {
+        "scenery": false,
+        "containment": true
+      },
+      "description": "Navigation and containment illustration"
+    }
+  ],
+  "derived_images": [
+    {
+      "file": "hero.jpg",
+      "source": "alien-hall.png",
+      "transform": "Nearest-neighbour enlargement to 1600 by 1000, JPEG quality 92"
+    },
+    {
+      "file": "social.jpg",
+      "source": "alien-hall.png",
+      "transform": "1200 by 630 branded card with original painting, dark overlay and typeset project title"
+    }
+  ]
+}
