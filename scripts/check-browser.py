@@ -120,6 +120,41 @@ with sync_playwright() as pw:
  page.select_option('#environment','planet2');page.select_option('#reference','4');assert '102, 151' in page.locator('#cell-title').inner_text()
  go('corridors/');counts['profiles']=page.locator('#profile option').count();assert counts['profiles']==64;assert not page.locator('#status').inner_text();capture('corridors','#scene')
  page.select_option('#profile','52');page.locator('#nodes button').first.click();assert 'Inside' in page.locator('#result').inner_text();page.check('#surfaces');page.check('#cutaway');assert not page.locator('#status').inner_text()
+ # Every profile-54 definition must draw scenery, not just the path overlay.
+ page.select_option('#profile','54');page.select_option('#drawing-context','auto');page.uncheck('#probe');page.uncheck('#cutaway')
+ selections=page.locator('#object option').evaluate_all('(options)=>options.map(o=>o.value)')
+ assert len(selections)==22
+ coverage=[]
+ for name in selections:
+  page.select_option('#object',name)
+  assert page.locator('#surfaces').is_checked()
+  assert page.evaluate('scene.faceCount>0'),name
+  pixels=page.evaluate("""()=>{
+   const gl=scene.gl,pixels=new Uint8Array(gl.drawingBufferWidth*gl.drawingBufferHeight*4);
+   gl.readPixels(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+   const guides=[[13,19,26],[255,190,73],[81,210,255]];let n=0;
+   for(let i=0;i<pixels.length;i+=4)if(!guides.some(c=>c.every((v,j)=>Math.abs(v-pixels[i+j])<=1)))n++;
+   return n;
+  }""")
+  assert pixels>100,(name,pixels)
+  coverage.append(pixels)
+ page.select_option('#object','rc_s_e7')
+ assert page.locator('#scenery-link a').all_text_contents()==['walker1','rex_rmm1','pillbomb']
+ assert page.locator('#scenery-link a').count()==3
+ assert page.evaluate('paletteKey($("object").value)')=='rexc1'
+ page.select_option('#drawing-context','tunnel')
+ assert page.evaluate('scene.faceCount===0')
+ assert 'draws from a room' in page.locator('#scenery-status').inner_text()
+ page.select_option('#drawing-context','auto');assert page.evaluate('scene.faceCount>0')
+ for name in ['rc_r_e2','rc_e_e2']:
+  page.select_option('#object',name);assert 'Drawing from a tunnel' in page.locator('#scenery-status').inner_text()
+ page.uncheck('#surfaces');assert 'Scenery is hidden' in page.locator('#scenery-status').inner_text()
+ page.select_option('#object','rc_s_e4');assert page.locator('#surfaces').is_checked()
+ counts['room54_visible_scenery']=len(coverage)
+ page.select_option('#profile','51');page.select_option('#object','rexxon5')
+ assert 'no static preview' in page.locator('#object option:checked').inner_text()
+ assert 'no static scenery preview' in page.locator('#scenery-status').inner_text()
+ assert page.locator('#scenery-link a').count()>0
  for route in ['', 'story/', 'artwork/', 'sound/', 'about/']:
   go(route)
   if route=='sound/':

@@ -22,10 +22,7 @@ viewer=replace(viewer,'${model.path} · ${model.size.toLocaleString()} bytes · 
 viewer=replace(viewer,"let yaw=.65,pitch=.35,zoom=1","let yaw=.65,pitch=.35,zoom=1");
 viewer=viewer.replace("'../resources/", "'../models/");
 await write('models/viewer.js',viewer);
-let corridors=await read('corridors/viewer.js');
-corridors=replace(corridors,"link.href='../scenery/index.html#'+name;link.textContent='Inspect scenery program';","const model=InfernoWorld.models.get(InfernoWorld.parts(name)[0]?.name);link.href='../models/'+(model?'#'+model.id:'');link.textContent='Explore the model parts';");
-corridors += `\naddEventListener('hashchange',()=>{const n=Number(location.hash.slice(1));if(Number.isInteger(n)&&n>=0&&n<64&&n!==active.index){active=InfernoCorridor.profiles[n];select();}});\n`;
-await write('corridors/viewer.js',corridors);
+await write('corridors/viewer.js',await read('corridors/viewer.js'));
 provenance.scope={models:models.models.length,grids:world.environments.length,corridor_profiles:64,description:'Decoded display data and adapted viewers only. No executable, original archive, install media, ROM, source-asset download or exporter.'};
 await fs.writeFile(path.join(root,'content/data-provenance.json'),JSON.stringify(provenance,null,2)+'\n');
 console.log(`Imported ${models.models.length} display models and ${world.environments.length} grids.`);

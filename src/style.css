@@ -59,3 +59,6 @@ body.dark-page{color-scheme:dark;--ink:#e3eaf0;--paper:#101923;--muted:#aabdc9;-
 
 /* Model category browsing. */
 .model-groups{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}.model-group{font-size:.85rem;padding:4px 10px;border:1px solid #507668;border-radius:16px;background:#203c35;color:#c7e5d4;cursor:pointer}#category{max-width:min(100%,320px)}#usage-summary,#usage-note{line-height:1.6;overflow-wrap:anywhere}#related-models a{margin-right:12px}.public-viewer .toolbar label{min-width:0}
+
+/* Wrapped links to every component of the selected scenery. */
+#scenery-link{flex-basis:100%;line-height:1.8;overflow-wrap:anywhere}#scenery-status{line-height:1.6}

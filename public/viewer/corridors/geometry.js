@@ -11,6 +11,23 @@ const InfernoCorridor=(()=>{
   const edges=new Set();
   for(let j=0;j<p.routes.length;j+=2){const route=p.routes[j];if(route.some(i=>i>=p.nodes.length))continue;line(route.map(i=>p.nodes[i]));if(!cage||p.containment!=='tube')continue;for(let k=1;k<route.length;k++){const aa=route[k-1],bb=route[k],key=[aa,bb].sort((a,b)=>a-b).join(':');if(edges.has(key))continue;edges.add(key);const a=p.nodes[aa],b=p.nodes[bb],d=b.map((v,i)=>v-a[i]),length=Math.hypot(...d);if(!length)continue;const axis=d.map(v=>v/length),seed=Math.abs(axis[1])<.9?[0,1,0]:[1,0,0],cross=(u,v)=>[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],raw=cross(axis,seed),u=raw.map(v=>v/Math.hypot(...raw)),v=cross(axis,u),rings=[];for(const centre of[a,b]){const ring=Array.from({length:13},(_,i)=>centre.map((n,j)=>n+radius*(Math.cos(i*Math.PI/6)*u[j]+Math.sin(i*Math.PI/6)*v[j])));line(ring,253);rings.push(ring);}for(let i=0;i<12;i+=3)line([rings[0][i],rings[1][i]],253);}}
  }
+
+ // The game sets drawing bit 1 when the camera occupies a room. Corridor
+ // pieces can test either sense of that bit, independently of containment.
+ // An inspection camera can show either context, including older variants.
+ function scenery(name,profile,rotation=0,context='auto'){
+  const build=mode=>{
+   const mesh={faces:[],lines:[],points:[],warnings:new Set()};
+   if(name)InfernoWorld.append(mesh,name,[0,0,0],rotation*16384,mode==='room'?6:4,1);
+   return mesh;
+  };
+  const count=mesh=>mesh.faces.length+mesh.lines.length+mesh.points.length;
+  const preferred=profile.containment==='room'?'room':'tunnel';
+  let mode=context==='auto'?preferred:context,mesh=build(mode);
+  const other=mode==='room'?'tunnel':'room',alternative=count(mesh)?null:build(other);
+  if(context==='auto'&&!count(mesh)&&count(alternative)){mode=other;mesh=alternative;}
+  return {mesh,context:mode,count:count(mesh),alternative:alternative&&count(alternative)?other:null};
+ }
  function palette(source){const out=source.map(c=>c.slice());out[252]=[63,47,18];out[253]=[20,52,63];out[254]=[25,63,35];out[255]=[63,20,25];return out;}
- return{profiles,rotate,contains,append,palette};
+ return{profiles,rotate,contains,append,scenery,palette};
 })();
