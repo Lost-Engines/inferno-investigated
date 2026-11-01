@@ -57,6 +57,29 @@ with sync_playwright() as pw:
  page.mouse.move(x,y);page.mouse.down();page.mouse.move(x+50,y+25,steps=4);page.mouse.up()
  end=page.evaluate('[yaw,pitch]');assert end[0]>start[0] and end[1]>start[1]
  counts['visible_model_presets']=page.evaluate('all.filter(m=>!m.preview.empty).length')
+ # Moving geometry must remain visible as pixels, not merely as counted faces.
+ choose_model('tera1');assert page.locator('#state-value').get_attribute('max')=='71'
+ assert page.locator('#animation-view').input_value()=='follow'
+ coverage=page.evaluate("""async () => {
+  const counts=[];
+  for(let value=0;value<72;value++){
+   setState(value);
+   await new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done)));
+   const c=$('preview'),pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+   let covered=0;for(let i=0;i<pixels.length;i+=4)if(pixels[i]!==16||pixels[i+1]!==23||pixels[i+2]!==33)covered++;
+   counts.push(covered);
+  }
+  return counts;
+ }""")
+ assert min(coverage)>1000,coverage
+ counts['tera1_visible_animation_states']=len(coverage)
+ page.select_option('#animation-view','path');assert page.evaluate('bounds.radius')>10000
+ page.select_option('#animation-view','follow');assert page.evaluate('bounds.radius')<1000
+ page.evaluate('setState(70)');page.check('#loop');page.fill('#speed','30');page.locator('#play').click()
+ page.wait_for_function('parameters[0]<10&&direction===1',timeout=1500);page.evaluate('stop()')
+ page.select_option('#state','7');assert page.locator('#state-toggle').is_visible() and page.locator('#play').is_hidden()
+ page.check('#state-toggle');page.wait_for_function('document.querySelector("#status").textContent==="Hidden by parameter 7."')
+ page.uncheck('#state-toggle');page.wait_for_function('!document.querySelector("#status").textContent')
  go('maps/');counts['worlds']=page.locator('#environment option').count();assert counts['worlds']==31;assert '29, 150' in page.locator('#cell-title').inner_text();assert not page.locator('#status').inner_text();capture('worlds','#scene')
  page.locator('a[href="#corr01/14/174"]').click();page.wait_for_function('document.querySelector("#cell-title").textContent.includes("14, 174")');page.check('#corridors');page.check('#cutaway');assert not page.locator('#status').inner_text()
  page.select_option('#environment','space1');assert '80, 78' in page.locator('#cell-title').inner_text()

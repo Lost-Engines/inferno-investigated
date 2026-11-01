@@ -7,7 +7,7 @@ const InfernoTextures={
   resolve(item){const name=item.textureSource==='global'?INFERNO_DATA.global_textures[item.texture]:item.textureName;return INFERNO_DATA.textures[(name||'').replace(/^!/, '')]||null;}
 };
 let active=all.find(m=>m.id===location.hash.slice(1)||m.name===decodeURIComponent(location.hash.slice(1)))||all.find(m=>m.name==='epicship')||all[0];
-let yaw=.65,pitch=.35,zoom=1,pan=[0,0],bounds,page=0,filtered=all,tiles=[],playing=false,direction=1,last=0,stepTime=0,dirty=true,proceduralMotion=false;
+let yaw=.65,pitch=.35,zoom=1,pan=[0,0],bounds,page=0,filtered=all,tiles=[],playing=false,direction=1,last=0,stepTime=0,dirty=true,proceduralMotion=false,animationFrame=null;
 const noise={x:0x1234,y:0x5678},procNoise={seed:0x4321};
 const project=v=>InfernoPreview.project(yaw,pitch)(v);
 const paletteKey=model=>$('palette').value||model.preferred_palette||INFERNO_DATA.default_palette;
@@ -73,22 +73,44 @@ function setState(value){
   parameters[c.index]=Math.max(0,Math.min(c.max,Math.round(value)));
   $('state-value').value=$('state-slider').value=parameters[c.index];
   $('state-toggle').checked=parameters[c.index]!==c.toggle_states?.[0];
-  stateSummary();dirty=true;
+  stateSummary();updateAnimationFrame();dirty=true;
 }
 function stateUI(){
   const c=control();$('states').hidden=!c;$('zero-states').hidden=!c;
+  animationFrame=null;
+  $('state-info').textContent=c?.description||'';
+  $('state-info').hidden=!c?.description;
+  $('animation-view-box').hidden=true;
   if(!c){stateSummary();return;}
   const toggle=c.playback==='toggle';$('toggle-box').hidden=!toggle;
+  $('toggle-caption').textContent=c.toggle_label||'Alternate state';
+  $('loop').parentElement.hidden=$('speed').parentElement.hidden=toggle;
   for(const id of ['state-slider','state-value','play','reverse','loop','speed'])$(id).hidden=toggle;
   for(const id of ['state-slider','state-value'])$(id).max=c.max;
   $('range').textContent=`${c.index===256?'Initial state · ':''}0–${c.max}`;
-  setState(parameters[c.index]);
+  setState(parameters[c.index]);prepareAnimationFrame();
 }
 function stop(){playing=false;$('play').textContent='Play once';}
 function fit(){
   let g=geometry(active,{rules:false});
   if(!g.primitives.length)g=geometry(active);
   bounds=framing(g);dirty=true;
+}
+function prepareAnimationFrame(){
+  const c=control();
+  animationFrame=c?InfernoPreview.animationFrames(active,{parameters,project,
+    rules:$('rules').checked,level:Number($('lod').value)||0,
+    distance:Number($('draw-distance').value)||1,status:Number($('draw-flags').value)||0},c):null;
+  $('animation-view-box').hidden=!animationFrame?.moves;
+  updateAnimationFrame();
+}
+function updateAnimationFrame(){
+  if(!animationFrame)return;
+  if(!animationFrame.moves){if(playing)bounds=animationFrame.whole;return;}
+  if($('animation-view').value==='path'){bounds=animationFrame.whole;return;}
+  let g=geometry(active,{rules:false});
+  if(!g.primitives.length)g=geometry(active);
+  if(g.primitives.length)bounds={centre:framing(g).centre,radius:animationFrame.radius};
 }
 function restorePreview(resetCamera=true){
   stop();const p=profile(active);
@@ -159,20 +181,16 @@ $('state-toggle').onchange=e=>setState(control().toggle_states[e.target.checked?
 function startAnimation(reverse=false){
   playing=!playing||reverse;direction=reverse?-1:1;stepTime=0;
   if(!reverse&&parameters[control().index]>=control().max)setState(0);
-  if(playing){
-    const c=control(),old=parameters[c.index],combined={primitives:[]};
-    for(const v of c.states){parameters[c.index]=v;combined.primitives.push(...geometry(active,{rules:false}).primitives);}
-    parameters[c.index]=old;
-    if(combined.primitives.length)bounds=framing(combined);
-  }
+  if(playing)updateAnimationFrame();
   $('play').textContent=playing?'Stop':'Play once';dirty=true;
 }
 $('play').onclick=()=>startAnimation();$('reverse').onclick=()=>startAnimation(true);
-$('reset').onclick=()=>{const p=profile(active);yaw=p.yaw;pitch=p.pitch;zoom=1;pan=[0,0];fit();};
+$('reset').onclick=()=>{const p=profile(active);yaw=p.yaw;pitch=p.pitch;zoom=1;pan=[0,0];fit();prepareAnimationFrame();};
+$('animation-view').onchange=()=>{updateAnimationFrame();dirty=true;};
 $('restore-preview').onclick=()=>restorePreview();
 $('zero-states').onclick=()=>{stop();parameters.fill(0);stateUI();dirty=true;};
 for(const id of ['rules','edges','neutral','jitter','spin'])$(id).onchange=()=>{dirty=true;thumbnails();};
-for(const id of ['lod','draw-distance','draw-flags'])$(id).onchange=()=>{stop();fit();};
+for(const id of ['lod','draw-distance','draw-flags'])$(id).onchange=()=>{stop();fit();prepareAnimationFrame();};
 $('paging').onchange=()=>{page=0;gallery();};$('prev').onclick=()=>{page--;gallery();};$('next').onclick=()=>{page++;gallery();};
 let drag=null;
 $('preview').onpointerdown=e=>{drag=[e.clientX,e.clientY];$('preview').setPointerCapture(e.pointerId);};
@@ -189,7 +207,7 @@ function tick(time){
       stepTime=0;const c=control(),values=c.indexed?c.states:null;
       let value=parameters[c.index]+direction;
       if(values){const index=values.findIndex(v=>v>=parameters[c.index]);value=values[index+direction]??(direction>0?c.max+1:-1);}
-      if(value>c.max||value<0){if($('loop').checked){direction=-direction;value=Math.max(0,Math.min(c.max,value));}else{stop();value=Math.max(0,Math.min(c.max,value));}}
+      if(value>c.max||value<0){if($('loop').checked){if(c.playback==='cyclic')value=direction>0?0:c.max;else{direction=-direction;value=Math.max(0,Math.min(c.max,value));}}else{stop();value=Math.max(0,Math.min(c.max,value));}}
       setState(value);
     }
   }
@@ -199,7 +217,8 @@ function tick(time){
       const missing=draw($('preview'),g,bounds);
       proceduralMotion=g.primitives.some(p=>p.mode===4);
       $('notes').textContent=[`${g.faces.length} surfaces · ${g.lines.length} lines · ${g.points.length} points`,...g.warnings,...(missing?[`${missing} textured surfaces have unresolved bindings`]:[])].join(' · ');
-      $('status').textContent=g.primitives.length?'':profile(active).explanation||'Nothing is drawn with these settings. Restore the preview or try another state.';
+      const hidden=active.parameters.find(c=>c.hidden_message&&parameters[c.index]);
+      $('status').textContent=g.primitives.length?'':hidden?.hidden_message||profile(active).explanation||'Nothing is drawn with these settings. Restore the preview or try another state.';
     }catch(e){$('status').textContent=e.message;}
     if(dirty)thumbnails();dirty=false;
   }

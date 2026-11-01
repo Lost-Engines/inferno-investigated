@@ -74,8 +74,23 @@
     }
     return {...base,empty:'Needs game context',explanation:'This drawing program needs additional inputs from the game.'};
   }
+  function animationFrames(model,options,control) {
+    const parameters=[...options.parameters],combined={primitives:[]},centres={primitives:[]};
+    let radius=1;
+    for(const value of control.states) {
+      parameters[control.index]=value;
+      let g=InfernoModel.inspect(model,{...options,parameters,rules:false});
+      if(!g.primitives.length)g=InfernoModel.inspect(model,{...options,parameters});
+      if(!g.primitives.length)continue;
+      const frame=framing(g);radius=Math.max(radius,frame.radius);
+      centres.primitives.push({kind:'point',vertex:frame.centre,pixelSize:1});
+      combined.primitives.push(...g.primitives);
+    }
+    if(!combined.primitives.length)return null;
+    return {whole:framing(combined),radius,moves:framing(centres).radius>radius};
+  }
   function pointRadius(pixelSize,width,height,dpr=1) {
     return Math.max(1.25*dpr,pixelSize*Math.min(width/320,height/200)/2);
   }
-  root.InfernoPreview={project,parameters,framing,badges,find,pointRadius};
+  root.InfernoPreview={project,parameters,framing,badges,find,animationFrames,pointRadius};
 })(globalThis);
