@@ -33,9 +33,11 @@ Inferno’s models are small programs. Their commands build vertices, choose whi
 
 We built an interpreter for those commands so we could see the models move. The [model viewer](../models/) exposes their controls: turn a ship around, change its animation state, then watch what its drawing program does. It is particularly satisfying to inspect machinery or creatures that are usually moving past too quickly to appreciate.
 
-Start with [epicship](../models/#epicship), then try a frigate or one of the Rexxon creatures. Look for the state sliders below the main view. They let us examine each stage of an animation or play the sequence through.
+Start with [the player’s fighter](../models/#epicanim), then try a frigate or one of the Rexxon creatures. Look for the state sliders below the main view. They let us examine each stage of an animation or play the sequence through.
 
-<figure><a href="../models/#epicship"><img src="../images/models.jpg" alt="The epicship model shown from an oblique angle in the interactive viewer" loading="lazy" width="1200" height="750"></a><figcaption>Epicship, one of the 1,691 models shared by all four editions.</figcaption></figure>
+<figure><a href="../models/#epicship"><img src="../images/models.jpg" alt="The epicship model shown from an oblique angle in the interactive viewer" loading="lazy" width="1200" height="750"></a><figcaption>The unused epicship model, one of the 1,691 models shared by all four editions.</figcaption></figure>
+
+The filenames can be misleading. The player’s exterior uses `epicanim`, `epicsort` and `epiccorr`; `epicship` is an unused model. We followed the mission placements, actor definitions and drawing code to group the collection by where it appears in the game. The viewer also separates friendly and enemy actors and keeps the unused material together.
 
 ## Worlds built from small pieces
 

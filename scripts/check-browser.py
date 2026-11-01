@@ -22,7 +22,7 @@ with sync_playwright() as pw:
  page.locator('#play').click();page.wait_for_timeout(300);assert not page.locator('#status').inner_text()
  page.fill('#search','rex_bug');assert page.locator('#model option').count()==3
  page.fill('#search','');page.locator('#next').click();assert page.locator('#page').inner_text().startswith('2 /')
- page.locator('a[href="#epicship"]').click();page.wait_for_function('document.querySelector("#title").textContent.includes("epicship")')
+ page.locator('a[href="#epicanim"]').click();page.wait_for_function('document.querySelector("#title").textContent.includes("epicanim")')
  # All generated presets must remain visible at the actual main-view scale.
  invisible=page.evaluate("""() => all.filter(m=>!m.preview.empty).filter(m=>{
   const p=m.preview;
@@ -64,21 +64,21 @@ with sync_playwright() as pw:
   assert page.locator('#model option').count()==total,(category,total)
   assert page.evaluate('filtered.includes(active)&&active.categories.includes($("category").value)')
   assert 'category='+category in page.url
- page.select_option('#category','cockpit');page.fill('#search','bollocks')
+ page.select_option('#category','unused');page.fill('#search','bollocks')
  assert page.locator('#model option').count()==1
  assert '13 polygons' in page.locator('#usage-note').inner_text()
  page.locator('#related-models a').filter(has_text='epiccok2').click()
  page.wait_for_function('active.name==="epiccok2"');assert page.locator('#search').input_value()==''
- assert page.locator('#category').input_value()=='cockpit'
- page.locator('a[href="#epicship"]').click();page.wait_for_function('active.name==="epicship"')
+ assert page.locator('#category').input_value()==''
+ page.locator('a[href="#epicanim"]').click();page.wait_for_function('active.name==="epicanim"')
  assert page.locator('#category').input_value()==''
  assert page.locator('#model option').count()==1691
  page.select_option('#category','craft');page.fill('#search','no-such-inferno-model')
  assert page.locator('#model').is_disabled() and page.locator('#model option').count()==0
  assert 'No models match' in page.locator('#gallery').inner_text()
  page.fill('#search','');page.select_option('#category','')
- go('models/?category=cockpit#bollocks')
- assert page.locator('#category').input_value()=='cockpit' and page.evaluate('active.name')=='bollocks'
+ go('models/?category=unused#bollocks')
+ assert page.locator('#category').input_value()=='unused' and page.evaluate('active.name')=='bollocks'
  page.select_option('#category','');page.fill('#search','fart')
  choose_model('fart');assert page.locator('#notes').inner_text()=='0 surfaces · 0 lines · 36 points'
  def covered(selector):
@@ -87,8 +87,18 @@ with sync_playwright() as pw:
  assert covered('#preview')>36*4,'World-sized spheres collapsed to single pixels'
  page.locator('[data-model="fart"] canvas').scroll_into_view_if_needed();page.wait_for_timeout(100)
  assert covered('[data-model="fart"] canvas')>36*3,'Sphere thumbnail is too small'
- counts['model_categories']=len(group_counts)
  counts['fart_visible_pixels']=covered('#preview')
+ # Categories must follow real consumers, including actor allegiance.
+ assert page.evaluate('all.filter(m=>m.categories.includes("player")).length')==6
+ assert page.evaluate('all.find(m=>m.name==="fighter1").categories.includes("friendly")')
+ assert page.evaluate('!all.find(m=>m.name==="fighter1").categories.includes("player")')
+ assert page.evaluate('all.find(m=>m.name==="fuel").categories.join()')=='pickups'
+ assert page.evaluate('all.find(m=>m.name==="epicship").categories.join()')=='unused'
+ choose_model('fighter1');page.locator('#usage-reference-box').evaluate('(e)=>e.open=true')
+ assert 'actor profile' in page.locator('#usage-references').inner_text()
+ assert 'friendly side' in page.locator('#usage-references').inner_text()
+ page.locator('#usage-reference-box').evaluate('(e)=>e.open=false')
+ counts['model_categories']=len(group_counts)
  page.fill('#search','')
 
  # Moving geometry must remain visible as pixels, not merely as counted faces.

@@ -11,10 +11,10 @@
     "shared/triangulate.js": "96f11c061e26134a5f9a9a6e5d58a2371755a3238b281e8ea257d6b0f655852f",
     "shared/scene.js": "7038f3584ca1adce9c9cbcda2a5204f371813f9746698951b665ca17ec4f08d4",
     "corridors/geometry.js": "32cf8e0063d561894a4608f936117db224359458637a69835bdafc28d3fe0246",
-    "models/data.js": "781ff43554cdb8c0b9b74b203ef21966aedb614723e2ef8fd879ccf86b5eb76c",
+    "models/data.js": "7b42ba2e05405722229cddfa9079442a09f8967feed577c207236bddc8fe6663",
     "maps/data.js": "b46ad5356d4a3db927a513a4fabda538c188163aa2e353fece9c58d573705f21",
     "corridors/data.js": "b4011055a7ad7565a801b448cf53fc3d08cd13c70b17dc68dc95f1d325d2f0ee",
-    "models/viewer.js": "91c340e1a2179254938dafeaa09e85e6367931666d76e0333f59fc7a8903cda1",
+    "models/viewer.js": "97cfe2438a319991be0dd7fe2a8ce1f127be0d3f032332cf0f470255ffee3e7a",
     "corridors/viewer.js": "cd6c10460ae32e192a881585898dd8ce61eb8c447df5a089a83b756421274a2a"
   },
   "scope": {

@@ -62,3 +62,5 @@ body.dark-page{color-scheme:dark;--ink:#e3eaf0;--paper:#101923;--muted:#aabdc9;-
 
 /* Wrapped links to every component of the selected scenery. */
 #scenery-link{flex-basis:100%;line-height:1.8;overflow-wrap:anywhere}#scenery-status{line-height:1.6}
+
+#usage-references{max-height:24rem;overflow:auto;line-height:1.65;overflow-wrap:anywhere;padding-right:1rem}#usage-references li{margin-bottom:.7rem}

@@ -7,7 +7,7 @@ const InfernoTextures={
   colours(palette){if(!inkCache.has(palette))inkCache.set(palette,palette.map(rgb=>rgb.map(v=>Math.round(v*255/63))));return inkCache.get(palette);},
   resolve(item){const name=item.textureSource==='global'?INFERNO_DATA.global_textures[item.texture]:item.textureName;return INFERNO_DATA.textures[(name||'').replace(/^!/, '')]||null;}
 };
-let active=all.find(m=>m.id===location.hash.slice(1)||m.name===decodeURIComponent(location.hash.slice(1)))||all.find(m=>m.name==='epicship')||all[0];
+let active=all.find(m=>m.id===location.hash.slice(1)||m.name===decodeURIComponent(location.hash.slice(1)))||all.find(m=>m.name==='epicanim')||all[0];
 let yaw=.65,pitch=.35,zoom=1,pan=[0,0],bounds,page=0,filtered=all,tiles=[],playing=false,direction=1,last=0,stepTime=0,dirty=true,proceduralMotion=false,animationFrame=null;
 const noise={x:0x1234,y:0x5678},procNoise={seed:0x4321};
 const project=v=>InfernoPreview.project(yaw,pitch)(v);
@@ -141,9 +141,13 @@ function usageInfo(model){
   $('usage-note').textContent=note?.text||'';$('usage-note').hidden=!note;
   const u=model.usage,summary=[];
   const short=values=>values.slice(0,6).join(', ')+(values.length>6?` and ${values.length-6} more`:'');
+  if(u.actors?.length)summary.push('Actors: '+short(u.actors)+'.');
+  if(u.stored_scenery?.length)summary.push('Stored assemblies: '+short(u.stored_scenery)+'.');
   if(u.scenery?.length)summary.push('Scenery assemblies: '+short(u.scenery)+'.');
   if(u.worlds?.length)summary.push('Worlds: '+short(u.worlds)+'.');
   $('usage-summary').textContent=summary.join(' ');$('usage-summary').hidden=!summary.length;
+  $('usage-references').replaceChildren(...(u.sources||[]).map(source=>{const li=document.createElement('li');li.textContent=source;return li;}));
+  $('usage-reference-box').hidden=!u.sources?.length;
   $('related-models').replaceChildren();$('related-models').hidden=!note?.related?.length;
   if(note?.related?.length){
     $('related-models').append('Related models: ');
@@ -172,7 +176,7 @@ function list(){
   $('model').disabled=!filtered.length;
   if(filtered.length&&!filtered.includes(active))select(filtered.find(m=>m.name===categoryById.get(category)?.example)||filtered[0]);
   $('model').value=active.id;page=0;
-  $('category-info').textContent=categoryById.get(category)?.description||'Browse by type, or search model names, actors and scenery locations.';
+  $('category-info').textContent=categoryById.get(category)?.description||'Browse by in-game use or allegiance, or search model names, actors and locations.';
   updateLocation();gallery();
 }
 function searchText(model){
@@ -213,7 +217,7 @@ function thumbnails(){
     }catch(e){t.button.title=e.message;}
   }
 }
-$('category').add(new Option(`All types (${all.length.toLocaleString()})`,''));
+$('category').add(new Option(`All uses (${all.length.toLocaleString()})`,''));
 const sections=new Map();
 for(const c of categories){
   if(!sections.has(c.section)){const group=document.createElement('optgroup');group.label=c.section;sections.set(c.section,group);$('category').append(group);}
