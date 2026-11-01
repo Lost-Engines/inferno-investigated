@@ -21,7 +21,6 @@ let viewer=await read('models/viewer.js');
 viewer=replace(viewer,'${model.path} · ${model.size.toLocaleString()} bytes · ${model.instructions.length.toLocaleString()} instructions · name: ${model.name_status}','${model.instructions.length.toLocaleString()} drawing commands · ${model.levels.length} detail levels');
 viewer=replace(viewer,"let yaw=.65,pitch=.35,zoom=1","let yaw=.65,pitch=.35,zoom=1");
 viewer=viewer.replace("'../resources/", "'../models/");
-viewer += `\naddEventListener('hashchange',()=>{const name=decodeURIComponent(location.hash.slice(1));const m=all.find(m=>m.id===name||m.name===name);if(m)select(m);});\n`;
 await write('models/viewer.js',viewer);
 let corridors=await read('corridors/viewer.js');
 corridors=replace(corridors,"link.href='../scenery/index.html#'+name;link.textContent='Inspect scenery program';","const model=InfernoWorld.models.get(InfernoWorld.parts(name)[0]?.name);link.href='../models/'+(model?'#'+model.id:'');link.textContent='Explore the model parts';");

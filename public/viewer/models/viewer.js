@@ -1,6 +1,7 @@
 'use strict';
 const $=id=>document.getElementById(id),all=INFERNO_DATA.models,parameters=Array(257).fill(0);
 const textureCache=new Map(),inkCache=new Map();
+const categories=INFERNO_DATA.categories||[],categoryById=new Map(categories.map(c=>[c.id,c]));
 const InfernoTextures={
   pixels(page){if(!textureCache.has(page))textureCache.set(page,Uint8Array.from(atob(page.pixels),c=>c.charCodeAt(0)));return textureCache.get(page);},
   colours(palette){if(!inkCache.has(palette))inkCache.set(palette,palette.map(rgb=>rgb.map(v=>Math.round(v*255/63))));return inkCache.get(palette);},
@@ -43,7 +44,13 @@ function draw(canvas,g,frame,thumbnail=false,model=active,projection=project){
         else missingTextures++;
       }else if(item.pixelSize){
         r.marker(points[0][0],points[0][1],InfernoPreview.pointRadius(item.pixelSize,w,h,dpr),ink);
-      }else r.circle(points[0][0],points[0][1],Math.max(1.3*dpr,InfernoEffects.radius(item,scale)),ink,item.mode,item.colour);
+      }else{
+        const radius=Math.max(InfernoPreview.pointRadius(1,w,h,dpr),InfernoEffects.radius(item,scale));
+        // Small world-sized spheres also need a visible footprint. The native
+        // circle helper reduces sizes below three to one/two-pixel squares.
+        if(radius<3&&item.mode==null)r.marker(points[0][0],points[0][1],radius,ink);
+        else r.circle(points[0][0],points[0][1],Math.max(3,radius),ink,item.mode,item.colour);
+      }
     }else if(item.kind==='line')r.line(points,ink,false,1,item.pattern,stroke);
     else{
       const texture=InfernoTextures.resolve(item);
@@ -120,26 +127,67 @@ function restorePreview(resetCamera=true){
   bounds=p.frame||{centre:[0,0,0],radius:100};
   stateUI();dirty=true;
 }
+function updateLocation(){
+  const url=new URL(location.href);
+  if($('category').value)url.searchParams.set('category',$('category').value);else url.searchParams.delete('category');
+  url.hash=active.id;history.replaceState(null,'',url);
+}
+function usageInfo(model){
+  $('model-groups').replaceChildren(...model.categories.map(id=>{
+    const button=document.createElement('button');button.className='model-group';button.textContent=categoryById.get(id).label;
+    button.onclick=()=>{$('category').value=id;list();$('gallery').scrollIntoView({block:'start'});};return button;
+  }));
+  const note=model.usage_note;
+  $('usage-note').textContent=note?.text||'';$('usage-note').hidden=!note;
+  const u=model.usage,summary=[];
+  const short=values=>values.slice(0,6).join(', ')+(values.length>6?` and ${values.length-6} more`:'');
+  if(u.scenery?.length)summary.push('Scenery assemblies: '+short(u.scenery)+'.');
+  if(u.worlds?.length)summary.push('Worlds: '+short(u.worlds)+'.');
+  $('usage-summary').textContent=summary.join(' ');$('usage-summary').hidden=!summary.length;
+  $('related-models').replaceChildren();$('related-models').hidden=!note?.related?.length;
+  if(note?.related?.length){
+    $('related-models').append('Related models: ');
+    for(const name of note.related){
+      const model=all.find(m=>m.name===name);if(!model)continue;
+      const link=document.createElement('a');link.href='#'+model.id;link.textContent=name;
+      $('related-models').append(link,' ');
+    }
+  }
+}
 function select(model){
   active=model;
-  $('model').value=model.id;history.replaceState(null,'','#'+model.id);
+  $('model').value=model.id;updateLocation();usageInfo(model);
   $('title').textContent=model.name+' · '+model.id;
   $('source').textContent=`${model.instructions.length.toLocaleString()} drawing commands · ${model.levels.length} detail levels`;
   $('lod').replaceChildren(...model.levels.map((l,i)=>new Option(`Level ${i+1} · ${l.distance}`,i)));
   $('state').replaceChildren(...model.parameters.map(p=>new Option(p.label,p.index)));
   restorePreview();paletteInfo();
-  $('details').textContent=JSON.stringify({names:model.names,detail_records:model.detail_records,parameters:model.parameters,preview:model.preview,texture_name:model.texture_name,opcodes:model.opcodes},null,2);
+  $('details').textContent=JSON.stringify({names:model.names,categories:model.categories,usage:model.usage,detail_records:model.detail_records,parameters:model.parameters,preview:model.preview,texture_name:model.texture_name,opcodes:model.opcodes},null,2);
   for(const t of tiles)t.button.classList.toggle('active',t.model===model);
 }
 function list(){
-  const q=$('search').value.trim().toLowerCase();
-  filtered=all.filter(m=>`${m.name} ${m.id} ${m.names.join(' ')}`.toLowerCase().includes(q));
+  const q=$('search').value.trim().toLowerCase(),category=$('category').value;
+  filtered=all.filter(m=>(!category||m.categories.includes(category))&&searchText(m).includes(q));
   $('model').replaceChildren(...filtered.map(m=>new Option(m.name+' · '+m.id,m.id)));
-  $('model').value=active.id;page=0;gallery();
+  $('model').disabled=!filtered.length;
+  if(filtered.length&&!filtered.includes(active))select(filtered.find(m=>m.name===categoryById.get(category)?.example)||filtered[0]);
+  $('model').value=active.id;page=0;
+  $('category-info').textContent=categoryById.get(category)?.description||'Browse by type, or search model names, actors and scenery locations.';
+  updateLocation();gallery();
+}
+function searchText(model){
+  return [model.name,model.id,...model.names,...Object.values(model.usage).flat()].join(' ').toLowerCase();
+}
+function revealModel(model){
+  active=model;
+  if($('category').value&&!model.categories.includes($('category').value))$('category').value='';
+  if(!searchText(model).includes($('search').value.trim().toLowerCase()))$('search').value='';
+  list();select(model);
 }
 function gallery(){
   const paging=$('paging').checked,start=paging?page*48:0,shown=filtered.slice(start,paging?start+48:undefined);
   $('gallery').replaceChildren();
+  if(!shown.length){const message=document.createElement('p');message.textContent='No models match these filters.';$('gallery').append(message);}
   tiles=shown.map(model=>{
     const button=document.createElement('button');button.className='tile'+(model===active?' active':'');button.dataset.model=model.name;
     const preview=document.createElement('span');preview.className='tile-preview';
@@ -165,6 +213,17 @@ function thumbnails(){
     }catch(e){t.button.title=e.message;}
   }
 }
+$('category').add(new Option(`All types (${all.length.toLocaleString()})`,''));
+const sections=new Map();
+for(const c of categories){
+  if(!sections.has(c.section)){const group=document.createElement('optgroup');group.label=c.section;sections.set(c.section,group);$('category').append(group);}
+  sections.get(c.section).append(new Option(`${c.label} (${c.count.toLocaleString()})`,c.id));
+}
+const initialCategory=new URL(location.href).searchParams.get('category');
+$('category').value=categoryById.has(initialCategory)?initialCategory:'';
+if(location.hash&&$('category').value&&!active.categories.includes($('category').value))$('category').value='';
+$('category').onchange=list;
+addEventListener('hashchange',()=>{const name=decodeURIComponent(location.hash.slice(1));const model=all.find(m=>m.id===name||m.name===name);if(model)revealModel(model);});
 $('palette').add(new Option('Automatic · model palette',''));
 const groups=new Map();
 for(const [key,info]of Object.entries(INFERNO_DATA.palette_info).sort((a,b)=>a[1].group.localeCompare(b[1].group)||a[1].label.localeCompare(b[1].label,undefined,{numeric:true}))){
@@ -225,5 +284,3 @@ function tick(time){
   requestAnimationFrame(tick);
 }
 list();select(active);requestAnimationFrame(tick);
-
-addEventListener('hashchange',()=>{const name=decodeURIComponent(location.hash.slice(1));const m=all.find(m=>m.id===name||m.name===name);if(m)select(m);});

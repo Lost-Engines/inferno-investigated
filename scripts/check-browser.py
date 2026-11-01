@@ -57,6 +57,40 @@ with sync_playwright() as pw:
  page.mouse.move(x,y);page.mouse.down();page.mouse.move(x+50,y+25,steps=4);page.mouse.up()
  end=page.evaluate('[yaw,pitch]');assert end[0]>start[0] and end[1]>start[1]
  counts['visible_model_presets']=page.evaluate('all.filter(m=>!m.preview.empty).length')
+ # Groups combine with search, carry into shared URLs and never strand a link.
+ group_counts=page.evaluate('Object.fromEntries(categories.map(c=>[c.id,c.count]))')
+ for category,total in group_counts.items():
+  page.select_option('#category',category)
+  assert page.locator('#model option').count()==total,(category,total)
+  assert page.evaluate('filtered.includes(active)&&active.categories.includes($("category").value)')
+  assert 'category='+category in page.url
+ page.select_option('#category','cockpit');page.fill('#search','bollocks')
+ assert page.locator('#model option').count()==1
+ assert '13 polygons' in page.locator('#usage-note').inner_text()
+ page.locator('#related-models a').filter(has_text='epiccok2').click()
+ page.wait_for_function('active.name==="epiccok2"');assert page.locator('#search').input_value()==''
+ assert page.locator('#category').input_value()=='cockpit'
+ page.locator('a[href="#epicship"]').click();page.wait_for_function('active.name==="epicship"')
+ assert page.locator('#category').input_value()==''
+ assert page.locator('#model option').count()==1691
+ page.select_option('#category','craft');page.fill('#search','no-such-inferno-model')
+ assert page.locator('#model').is_disabled() and page.locator('#model option').count()==0
+ assert 'No models match' in page.locator('#gallery').inner_text()
+ page.fill('#search','');page.select_option('#category','')
+ go('models/?category=cockpit#bollocks')
+ assert page.locator('#category').input_value()=='cockpit' and page.evaluate('active.name')=='bollocks'
+ page.select_option('#category','');page.fill('#search','fart')
+ choose_model('fart');assert page.locator('#notes').inner_text()=='0 surfaces · 0 lines · 36 points'
+ def covered(selector):
+  return page.locator(selector).evaluate("""c=>{const p=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+   let n=0;for(let i=0;i<p.length;i+=4)if(p[i]!==16||p[i+1]!==23||p[i+2]!==33)n++;return n;}""")
+ assert covered('#preview')>36*4,'World-sized spheres collapsed to single pixels'
+ page.locator('[data-model="fart"] canvas').scroll_into_view_if_needed();page.wait_for_timeout(100)
+ assert covered('[data-model="fart"] canvas')>36*3,'Sphere thumbnail is too small'
+ counts['model_categories']=len(group_counts)
+ counts['fart_visible_pixels']=covered('#preview')
+ page.fill('#search','')
+
  # Moving geometry must remain visible as pixels, not merely as counted faces.
  choose_model('tera1');assert page.locator('#state-value').get_attribute('max')=='71'
  assert page.locator('#animation-view').input_value()=='follow'
