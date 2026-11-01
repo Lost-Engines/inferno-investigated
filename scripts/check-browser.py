@@ -23,6 +23,40 @@ with sync_playwright() as pw:
  page.fill('#search','rex_bug');assert page.locator('#model option').count()==3
  page.fill('#search','');page.locator('#next').click();assert page.locator('#page').inner_text().startswith('2 /')
  page.locator('a[href="#epicship"]').click();page.wait_for_function('document.querySelector("#title").textContent.includes("epicship")')
+ # All generated presets must remain visible at the actual main-view scale.
+ invisible=page.evaluate("""() => all.filter(m=>!m.preview.empty).filter(m=>{
+  const p=m.preview;
+  return !geometry(m,{...p,frame:p.frame,parameters:InfernoPreview.parameters(p.parameters),project:InfernoPreview.project(p.yaw,p.pitch)}).primitives.length;
+ }).map(m=>m.name)""")
+ assert not invisible,invisible
+ assert page.evaluate('paletteKey(active)')=='justsun1'
+ assert page.locator('footer a[href="https://github.com/Lost-Engines/inferno-reverse"]').inner_text()=='Inferno analysis'
+ assert not page.locator('footer a[href*="tfx"]').count()
+ def choose_model(name):
+  page.evaluate('(name)=>select(all.find(m=>m.name===name))',name);page.wait_for_timeout(100)
+  assert name in page.locator('#title').inner_text()
+ for name,palette in [('planet1','intro_p1'),('planet7','intro_p1'),('pss1_s','p1ss'),('epicship','justsun1')]:
+  choose_model(name);assert page.evaluate('paletteKey(active)')==palette
+ page.select_option('#palette','justsun1');choose_model('planet1');assert page.evaluate('paletteKey(active)')=='justsun1'
+ page.select_option('#palette','')
+ choose_model('astblow1');assert not page.locator('#status').inner_text()
+ assert page.evaluate('parameters[0]>0&&parameters[1]>0&&parameters[7]===0')
+ page.locator('#zero-states').click();page.wait_for_timeout(100);assert 'Nothing is drawn' in page.locator('#status').inner_text()
+ page.locator('#restore-preview').click();page.wait_for_timeout(100);assert not page.locator('#status').inner_text()
+ page.fill('#search','astblow1');assert page.locator('.model-badge').inner_text()=='Animation'
+ for name,label in [('introast','Drawing disabled'),('kelp1','Drawing disabled'),('offsut','Vertices only'),('test1','Vertices only')]:
+  page.fill('#search',name);assert page.locator(f'[data-model="{name}"] .empty-preview').inner_text()==label
+ page.fill('#search','')
+ for name in ['fcorarm1','uflight','astring1','outline2']:
+  choose_model(name);assert not page.locator('#status').inner_text()
+  page.locator('#reset').click();page.wait_for_timeout(100);assert not page.locator('#status').inner_text()
+ # A drag to the right turns the model with the mouse; vertical direction is unchanged.
+ choose_model('epicship');page.locator('#preview').scroll_into_view_if_needed()
+ rect=page.locator('#preview').bounding_box();start=page.evaluate('[yaw,pitch]')
+ x=rect['x']+rect['width']/2;y=rect['y']+rect['height']/2
+ page.mouse.move(x,y);page.mouse.down();page.mouse.move(x+50,y+25,steps=4);page.mouse.up()
+ end=page.evaluate('[yaw,pitch]');assert end[0]>start[0] and end[1]>start[1]
+ counts['visible_model_presets']=page.evaluate('all.filter(m=>!m.preview.empty).length')
  go('maps/');counts['worlds']=page.locator('#environment option').count();assert counts['worlds']==31;assert '29, 150' in page.locator('#cell-title').inner_text();assert not page.locator('#status').inner_text();capture('worlds','#scene')
  page.locator('a[href="#corr01/14/174"]').click();page.wait_for_function('document.querySelector("#cell-title").textContent.includes("14, 174")');page.check('#corridors');page.check('#cutaway');assert not page.locator('#status').inner_text()
  page.select_option('#environment','space1');assert '80, 78' in page.locator('#cell-title').inner_text()

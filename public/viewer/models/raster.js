@@ -259,7 +259,14 @@
       const shifts=littleEndian?[0,8,16]:[24,16,8],old=pixels[index];
       pixels[index]=colour(shifts.map(shift=>Math.round(((ink>>>shift)&255)*alpha+((old>>>shift)&255)*(1-alpha))));
     }
-    function segment(a,b,ink,alpha,pattern=null){
+    // Viewer-sized markers and strokes; the native-size raster helpers remain available.
+    function marker(x,y,radius,ink,alpha=1){
+      const left=Math.max(0,Math.ceil(x-radius)),right=Math.min(width-1,Math.floor(x+radius));
+      for(let row=Math.max(0,Math.ceil(y-radius));row<=Math.min(height-1,Math.floor(y+radius));row++)
+        for(let col=left;col<=right;col++)if((col-x)**2+(row-y)**2<=radius**2)pixel(col,row,ink,alpha);
+    }
+    function segment(a,b,ink,alpha,pattern=null,thickness=1){
+      const plot=(x,y)=>thickness>1?marker(x,y,thickness/2,ink,alpha):pixel(x,y,ink,alpha);
       let x0=a[0],y0=a[1],x1=b[0],y1=b[1];
       // Clip before integer stepping so zoomed or very distant endpoints
       // cannot make a short visible line require millions of iterations.
@@ -279,14 +286,14 @@
         if(dy<dx){
           let error=dx>>1;
           for(let i=0;i<dx;i++){
-            if(pattern&128)pixel(x0,y0,ink,alpha);pattern=((pattern<<1)|(pattern>>>7))&255;
+            if(pattern&128)plot(x0,y0);pattern=((pattern<<1)|(pattern>>>7))&255;
             error-=dy;if(error<0){error+=dx;y0+=sy;}x0++;
           }
-          pixel(x0,y0,ink,alpha); // Native shallow lines always paint their final endpoint.
+          plot(x0,y0); // Native shallow lines always paint their final endpoint.
         }else{
           let error=dy>>1;
           for(let i=0;i<=dy;i++){
-            if(pattern&128)pixel(x0,y0,ink,alpha);pattern=((pattern<<1)|(pattern>>>7))&255;
+            if(pattern&128)plot(x0,y0);pattern=((pattern<<1)|(pattern>>>7))&255;
             y0+=sy;error-=dx;if(error<0){error+=dy;x0++;}
           }
         }
@@ -295,7 +302,7 @@
       const ax=Math.abs(x1-x0),ay=Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;
       let error=ax-ay,step=0;
       while(true){
-        if(pattern===null||((pattern>>>(7-(step&7)))&1))pixel(x0,y0,ink,alpha);
+        if(pattern===null||((pattern>>>(7-(step&7)))&1))plot(x0,y0);
         step++;
         if(x0===x1&&y0===y1)break;
         const twice=error*2;
@@ -303,11 +310,11 @@
         if(twice<ax){error+=ax;y0+=sy;}
       }
     }
-    function line(vertices,ink,closed=false,alpha=1,pattern=null){
-      for(let i=1;i<vertices.length;i++)segment(vertices[i-1],vertices[i],ink,alpha,pattern);
-      if(closed&&vertices.length>2)segment(vertices.at(-1),vertices[0],ink,alpha,pattern);
+    function line(vertices,ink,closed=false,alpha=1,pattern=null,thickness=1){
+      for(let i=1;i<vertices.length;i++)segment(vertices[i-1],vertices[i],ink,alpha,pattern,thickness);
+      if(closed&&vertices.length>2)segment(vertices.at(-1),vertices[0],ink,alpha,pattern,thickness);
     }
-    return {polygon,rounded,shaded,texture,sprite,circle,line,point:(x,y,size,ink)=>{x=Math.round(x);y=Math.round(y);for(let row=y;row<y+size;row++)span(row,x,x+size,ink);},finish:()=>context.putImageData(frame.image,0,0)};
+    return {polygon,rounded,shaded,texture,sprite,circle,marker,line,point:(x,y,size,ink)=>{x=Math.round(x);y=Math.round(y);for(let row=y;row<y+size;row++)span(row,x,x+size,ink);},finish:()=>context.putImageData(frame.image,0,0)};
   }
   root.InfernoRaster={begin,colour,roundedCorner,circleExtents,resizeSprite};
 })(globalThis);
