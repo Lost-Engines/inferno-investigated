@@ -6,7 +6,7 @@ We had already encountered pieces of Inferno while taking apart [TFX](https://lo
 
 The tunnels took us into new territory. TFX’s aircraft flew over scenery; Inferno’s craft had to navigate inside it. Working out how the game handled those interiors became one of the most absorbing parts of the project.
 
-For the drawing machinery itself, [How TFX draws a world](https://lost-engines.github.io/tfx-traced/graphics/) follows the graphics pipeline from model programs to VGA pixels, with interactive diagrams and the changes we found in Inferno. Its companion, [How TFX flies](https://lost-engines.github.io/tfx-traced/flight/), follows TFX’s aircraft physics through lift, control laws, engine failures and landings.
+For the drawing machinery itself, [How TFX draws a world](https://lost-engines.github.io/tfx-traced/graphics/) follows the graphics pipeline from model programs to VGA pixels, with interactive diagrams and the changes we found in Inferno. [How TFX flies](https://lost-engines.github.io/tfx-traced/flight/) follows the aircraft physics through lift, control laws, engine failures and landings. [How TFX’s weapons work](https://lost-engines.github.io/tfx-traced/weapons/) examines the missiles and bombs, including the differences between their code and the handbook.
 
 <figure><img class="pixel" src="../images/laboratory.png" alt="An ominous laboratory with a craft suspended over a circular platform" loading="lazy" width="320" height="200"><figcaption>A craft suspended in one of Inferno’s painted laboratories. The game combines these paintings with animated sequences and real-time 3D.</figcaption></figure>
 
